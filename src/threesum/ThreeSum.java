@@ -1,7 +1,4 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package threesum;
 
 import java.io.BufferedReader;
@@ -18,41 +15,45 @@ import java.util.Arrays;
  */
 public class ThreeSum {
 
-    /**
-     * @param args the command line arguments
-     */
-    static int[] TSum(int arr[], int N) {
-        int SortedArr[] = arr.clone();
-        Arrays.sort(SortedArr);
-        int res[] = new int[3];
-        res[0] = Integer.MAX_VALUE;
-        for (int k = 0; k < N; k++) {
-            int ij[] = TwoSum(SortedArr, N, SortedArr[k], k);
+    private static int[] findThreeElementsWithZeroSum(int arr[]) {
+        int[] sortedArr = new int[arr.length];
+        System.arraycopy(arr, 0, sortedArr, 0, arr.length);
+        Arrays.sort(sortedArr);
+        int[] resValues = new int[3];
+        resValues[0] = Integer.MAX_VALUE;
+        for (int k = 0; k < arr.length; k++) {
+            int ij[] = findTwoElementsBySum(sortedArr, k);
             if (ij[0] != -1) {
-                res[0] = SortedArr[k];
-                res[1] = SortedArr[ij[0]];
-                res[2] = SortedArr[ij[1]];
+                resValues[0] = sortedArr[k];
+                resValues[1] = sortedArr[ij[0]];
+                resValues[2] = sortedArr[ij[1]];
             }
         }
-        return SearchInNotSorted(arr, N, res);
+        return resValues[0] != Integer.MAX_VALUE ? 
+                getIndexesByValues(arr, resValues) : new int[]{-1};
     }
 
-    static int[] TwoSum(int arr[], int N, int El, int ElInd) {
+    /**
+     * @param arr sorted array
+     * @param sumResElemIndex index of element that should be sum of two other
+     * @return indexes of resut two elements
+     */
+    private static int[] findTwoElementsBySum(int arr[], int sumResElemIndex) {
         int inds[] = new int[2];
         inds[0] = -1;
-        int i = 0, j = N - 1;
-        if (j == ElInd) {
+        int i = 0, j = arr.length - 1;
+        if (j == sumResElemIndex) {
             j--;
-        } else if (i == ElInd) {
+        } else if (i == sumResElemIndex) {
             i++;
         }
         while (i < j) {
             int sum = arr[i] + arr[j];
-            if (sum > -El) {
+            if (sum > -arr[sumResElemIndex]) {
                 j--;
-            } else if (sum < -El) {
+            } else if (sum < -arr[sumResElemIndex]) {
                 i++;
-                if (i == ElInd) {
+                if (i == sumResElemIndex) {
                     i++;
                 }
             } else {
@@ -60,78 +61,40 @@ public class ThreeSum {
                 inds[1] = j;
                 j--;
             }
-            if (j == ElInd) {
+            if (j == sumResElemIndex) {
                 j--;
-            } else if (i == ElInd) {
+            } else if (i == sumResElemIndex) {
                 i++;
             }
         }
         return inds;
     }
 
-    static int[] SearchInNotSorted(int arr[], int N, int[] elems) {
-        int a = -1, b = -1, c = -1;
-        int res[] = new int[3];
-        res[0] = -1;
-        if (elems[0] == Integer.MAX_VALUE) {
-            return res;
-        }
-        for (int i = 0; i < N; i++) {
-            if (arr[i] == elems[0]) {
-                a = i;
-                break;
-            }
-        }
-        for (int i = 0; i < N; i++) {
-            if (arr[i] == elems[1]) {
-                b = i;
-                break;
-            }
-        }
-        for (int i = 0; i < N; i++) {
-            if (arr[i] == elems[2]) {
-                c = i;
-                break;
-            }
-        }
-        if (a > b) {
-            if (b > c) {
-                res[2] = a + 1;
-                res[1] = b + 1;
-                res[0] = c + 1;
-            } else {
-                if (a < c) {
-                    res[2] = c + 1;
-                    res[1] = a + 1;
-                } else {
-                    res[2] = a + 1;
-                    res[1] = c + 1;
+    /** 
+     * @param arr int array
+     * @param elems values of elements
+     * @return sorted indexes of elements
+     */
+    private static int[] getIndexesByValues(int arr[], int[] elems) {
+        
+        int res[] = new int[elems.length];
+        Arrays.fill(res, -1);
+        
+        for (int i = 0; i < arr.length; i++) {
+            for(int j = 0; j < res.length; j++){
+                if (arr[i] == elems[j] && res[j] == -1) {
+                    res[j] = i+1;
+                    break;
                 }
-                res[0] = b + 1;
-            }
-
-        } else {
-            if (a > c) {
-                res[2] = b + 1;
-                res[1] = a + 1;
-                res[0] = c + 1;
-            } else {
-                if (b < c) {
-                    res[2] = c + 1;
-                    res[1] = b + 1;
-                } else {
-                    res[2] = b + 1;
-                    res[1] = c + 1;
-                }
-                res[0] = a + 1;
             }
         }
+        
+        Arrays.sort(res);
         return res;
     }
 
     public static void main(String[] args){
-        // TODO code application logic here
-        try (BufferedReader reader = new BufferedReader(new FileReader("rosalind_3sum.txt"));
+        try (BufferedReader reader = new BufferedReader(new FileReader("input.txt"));
                 FileWriter writer = new FileWriter(new File("output.txt"))) {
 
             String inp[] = reader.readLine().split(" ");
@@ -143,20 +106,19 @@ public class ThreeSum {
                 for (int i = 0; i < n; i++) {
                     arr[i] = Integer.parseInt(str[i]);
                 }
-                int res[] = TSum(arr, n);
-                if (res[0] == -1) {
-                    writer.write(Integer.toString(res[0]));
-                    writer.flush();
-                    writer.write(System.getProperty("line.separator"));
-                    writer.flush();
-                } else {
-                    writer.write(Integer.toString(res[0]) + " " + Integer.toString(res[1]) + " " + Integer.toString(res[2]));
-                    writer.flush();
-                    writer.write(System.getProperty("line.separator"));
+                int res[] = findThreeElementsWithZeroSum(arr);
+                for(int i = 0; i < res.length; i++){
+                    writer.write(Integer.toString(res[i]));
+                    if(i == res.length - 1){
+                        writer.write(System.getProperty("line.separator"));
+                    }
+                    else{
+                        writer.write(" ");
+                    }
                     writer.flush();
                 }
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
